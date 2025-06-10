@@ -1,8 +1,9 @@
-from telethon import TelegramClient
 import asyncio
 from datetime import datetime, timedelta
-from telethon.tl.types import User, Dialog
 from typing import List, Tuple
+
+from telethon import TelegramClient
+from telethon.tl.types import User, Dialog
 
 from settings import TelegramScrapingSettings
 
