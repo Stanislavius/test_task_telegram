@@ -5,6 +5,7 @@ from typing import List, Tuple, Dict
 from telethon import TelegramClient
 from telethon.tl.types import User, Dialog, Message
 
+from gemini_wrapper import GeminiWrapper
 from settings import TelegramScrapingSettings
 
 
@@ -49,7 +50,7 @@ async def get_recent_client_chats(client: TelegramClient,
         if dialog.date < min_dialog_date:
             continue
 
-        if not isinstance(dialog.entity, User):
+        if not isinstance(dialog.entity, User) or dialog.entity.bot:
             continue
 
         messages = await client.get_messages(
@@ -141,6 +142,9 @@ async def main_func():
     async with client:
         # Get recent chats
         conversations = await get_conversions_for_analysis(client)
+        gemini_wrapper = GeminiWrapper()
+        for user, conversation in zip(conversations.keys(), conversations.values()):
+            print(user, gemini_wrapper.check_unfinished_promises("" + message for message in conversation))
 
 
 if __name__ == "__main__":
