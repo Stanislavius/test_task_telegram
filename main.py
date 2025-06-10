@@ -142,10 +142,20 @@ async def main_func():
     async with client:
         # Get recent chats
         conversations = await get_conversions_for_analysis(client)
+        conversations_with_issues = []
         gemini_wrapper = GeminiWrapper()
         for user, conversation in zip(conversations.keys(), conversations.values()):
-            print(user, gemini_wrapper.check_unfinished_promises("\n".join(message for message in conversation)
-))
+            text = "\n".join(message for message in conversation)
+            print(user, gemini_wrapper.check_unfinished_promises(text))
+            conversations_with_issues.append(gemini_wrapper.analyze_conversation_quality(text))
+        count = 0
+        for conversation in conversations_with_issues:
+            if conversation["has_issues"]:
+                count += 1
+        print(f"There are {count} conversations with issues")
+        for conversation in conversations_with_issues:
+            if conversation["has_issues"]:
+                print(conversation["issues_found"], conversation["summary"])
 
 
 if __name__ == "__main__":

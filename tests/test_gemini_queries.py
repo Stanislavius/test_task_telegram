@@ -42,3 +42,28 @@ def test_check_unfinished_promises_false(gemini: GeminiWrapper):
     assert not result
 
 
+def test_check_quality(gemini: GeminiWrapper):
+    sample_conversation= """
+    [2024-01-01 10:00:00] Manager: You are such a moron!
+    """
+    result = gemini.analyze_conversation_quality(sample_conversation)
+    assert result is not None
+    assert result["has_issues"] is True
+
+    sample_conversation = """
+    [2024-01-01 10:00:00] Manager: I'll send you the price calculation by the end of today.
+    [2024-01-01 10:05:00] Customer: Great, thank you!
+    [2024-01-01 16:00:00] Manager: Here's your calculation: $1000
+    """
+    result = gemini.analyze_conversation_quality(sample_conversation)
+    assert result is not None
+    assert result["has_issues"] is False
+
+    sample_conversation = """
+        [2024-01-01 10:05:00] Customer: I am not satisfied with your work!
+        """
+    result = gemini.analyze_conversation_quality(sample_conversation)
+    assert result is not None
+    assert result["has_issues"] is True
+
+

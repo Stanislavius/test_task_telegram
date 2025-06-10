@@ -1,5 +1,4 @@
-from datetime import datetime
-from typing import List, Dict
+import json
 
 import google.generativeai as genai
 
@@ -31,7 +30,6 @@ class GeminiWrapper:
                 raise e
 
     def check_unfinished_promises(self, conversation_text: str) -> bool:
-
         prompt = """
         Analyze this conversation and determine if:
         1. The manager promised to do something by the end of the day
@@ -45,4 +43,41 @@ class GeminiWrapper:
 
         result = self.query(prompt)
         return result.lower().strip() == "true"
+
+    def analyze_conversation_quality(self, conversation_text: str) -> dict:
+        prompt = """You are a JSON response generator. You must respond with ONLY valid JSON, no other text.
+        Rules:
+        1. Return ONLY the JSON object, no explanations or additional text
+        2. The response must be parseable by json.loads()
+        3. Do not include markdown, quotes or code blocks
+
+        Analyze this conversation and generate a JSON response with this exact structure:
+        {{
+            "has_issues": boolean,
+            "issues_found": string[],
+            "severity": "low" | "medium" | "high",
+            "summary": string
+        }}
+
+        Analysis criteria:
+        - Emotional negativity or customer dissatisfaction
+        - Poor quality of manager's consultation
+        - Unresponsive or passive manager behavior
+        - Communication errors or misunderstandings
+
+        Conversation to analyze:
+        {conversation}
+        """.format(conversation=conversation_text)
+
+        try:
+            result = self.query(prompt)
+            return json.loads(result)
+        except Exception as e:
+            return {
+                "has_issues": False,
+                "issues_found": [],
+                "severity": "none",
+                "summary": f"Error analyzing conversation: {str(e)}"
+            }
+
 
