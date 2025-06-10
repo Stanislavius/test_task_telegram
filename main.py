@@ -144,7 +144,8 @@ async def main_func():
         conversations = await get_conversions_for_analysis(client)
         gemini_wrapper = GeminiWrapper()
         for user, conversation in zip(conversations.keys(), conversations.values()):
-            print(user, gemini_wrapper.check_unfinished_promises("" + message for message in conversation))
+            print(user, gemini_wrapper.check_unfinished_promises("\n".join(message for message in conversation)
+))
 
 
 if __name__ == "__main__":
