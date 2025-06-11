@@ -6,7 +6,7 @@ from telethon import TelegramClient
 from telethon.tl.types import User, Dialog, Message
 
 from gemini_wrapper import GeminiWrapper
-from manager_performance import ManagerPerformanceAnalyzer
+from manager_performance import ManagerPerformanceAnalyzer, PerformanceReporter
 from settings import TelegramScrapingSettings
 
 
@@ -174,6 +174,14 @@ async def main_func():
             if analytics['quality_analysis']['has_issues']:
                 print("⚠️ Has quality issues:", analytics['quality_analysis']['issues_found'])
             print("-" * 50)
+
+        # Generate reports
+        reporter = PerformanceReporter(all_analytics)
+        reporter.save_reports()
+        
+        print("\nReports generated in 'reports' directory:")
+        print("- summary.html/.csv")
+        print("- detailed_metrics.html/.csv")
 
 
 if __name__ == "__main__":

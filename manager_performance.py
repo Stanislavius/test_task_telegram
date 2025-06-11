@@ -2,6 +2,8 @@ import statistics
 from typing import List, Dict
 
 from telethon.tl.types import Message
+import pandas as pd
+import os
 
 
 class ManagerPerformanceAnalyzer:
@@ -110,3 +112,59 @@ class ManagerPerformanceAnalyzer:
             f"- Out of Hours Messages: {detailed['out_of_hours_messages']}\n"
             f"- Conversation Initiative: {'Yes' if metrics['initiated_by_manager'] else 'No'}"
         )
+
+class PerformanceReporter:
+    def __init__(self, analytics_data: Dict[str, Dict]):
+        self.analytics_data = analytics_data
+        self.output_dir = "reports"
+        os.makedirs(self.output_dir, exist_ok=True)
+
+    def generate_summary_table(self) -> pd.DataFrame:
+        """Create summary DataFrame from analytics data"""
+        data = []
+        for client, analytics in self.analytics_data.items():
+            metrics = analytics['performance']['metrics']
+            quality = analytics['quality_analysis']
+            
+            data.append({
+                'Client': client,
+                'Total Messages': metrics['total_messages'],
+                'Manager/Client Messages': f"{metrics['manager_messages']}/{metrics['client_messages']}",
+                'Response Rate': f"{metrics['response_rate']:.2f}",
+                'Avg Response (min)': f"{metrics['avg_response_time']:.1f}",
+                'Quick/Slow Responses': f"{metrics['quick_responses']}/{metrics['slow_responses']}",
+                'Has Issues': '✓' if quality['has_issues'] else '',
+                'Unfinished Promises': '✓' if analytics['has_unfinished_promises'] else ''
+            })
+        
+        return pd.DataFrame(data)
+
+    def generate_detailed_metrics(self) -> pd.DataFrame:
+        """Create detailed metrics DataFrame"""
+        data = []
+        for client, analytics in self.analytics_data.items():
+            metrics = analytics['performance']['metrics']
+            
+            data.append({
+                'Client': client,
+                'Avg Response Time': f"{metrics['avg_response_time']:.1f}",
+                'Working Hours Avg': f"{metrics.get('working_hours_avg_response', 0):.1f}",
+                'Out of Hours Messages': metrics.get('out_of_hours_messages', 0),
+                'Quick Responses': metrics['quick_responses'],
+                'Slow Responses': metrics['slow_responses'],
+                'Response Rate': f"{metrics['response_rate']:.2f}"
+            })
+        
+        return pd.DataFrame(data)
+
+    def save_reports(self):
+        """Generate and save all reports"""
+        # Generate summary table
+        summary_df = self.generate_summary_table()
+        summary_df.to_html(os.path.join(self.output_dir, 'summary.html'))
+        summary_df.to_csv(os.path.join(self.output_dir, 'summary.csv'))
+
+        # Generate detailed metrics
+        detailed_df = self.generate_detailed_metrics()
+        detailed_df.to_html(os.path.join(self.output_dir, 'detailed_metrics.html'))
+        detailed_df.to_csv(os.path.join(self.output_dir, 'detailed_metrics.csv'))
