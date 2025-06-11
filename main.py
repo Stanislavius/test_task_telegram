@@ -6,6 +6,7 @@ from telethon import TelegramClient
 from telethon.tl.types import User, Dialog, Message
 
 from gemini_wrapper import GeminiWrapper
+from manager_performance import ManagerPerformanceAnalyzer
 from settings import TelegramScrapingSettings
 
 
@@ -119,13 +120,11 @@ async def format_all_conversations(client_chats: List[Tuple[Dialog, List[Message
     return formatted_dialogs
 
 
-async def get_conversions_for_analysis(client: TelegramClient):
+async def get_conversions_for_analysis(client: TelegramClient, client_chats: List[Tuple[Dialog, List[Message]]] = None):
     # Get manager's ID
     me = await client.get_me()
     my_id = me.id
 
-    # Get recent chats
-    client_chats = await get_recent_client_chats(client)
     # Format conversations for analysis
     formatted_conversations = await format_all_conversations(client_chats, my_id)
 
@@ -136,26 +135,45 @@ async def main_func():
     """
     Main function that handles the Telegram client connection
     """
-
     client = await create_client()
 
     async with client:
+        # Get manager's ID
+        me = await client.get_me()
+        my_id = me.id
+
         # Get recent chats
-        conversations = await get_conversions_for_analysis(client)
-        conversations_with_issues = []
+        client_chats = await get_recent_client_chats(client)
+        all_analytics = {}
+
         gemini_wrapper = GeminiWrapper()
-        for user, conversation in zip(conversations.keys(), conversations.values()):
-            text = "\n".join(message for message in conversation)
-            print(user, gemini_wrapper.check_unfinished_promises(text))
-            conversations_with_issues.append(gemini_wrapper.analyze_conversation_quality(text))
-        count = 0
-        for conversation in conversations_with_issues:
-            if conversation["has_issues"]:
-                count += 1
-        print(f"There are {count} conversations with issues")
-        for conversation in conversations_with_issues:
-            if conversation["has_issues"]:
-                print(conversation["issues_found"], conversation["summary"])
+
+        for dialog, messages in client_chats:
+            # Convert messages to text for AI analysis
+            formatted_messages = format_conversation_to_strings(dialog, messages, my_id)
+            text = "\n".join(formatted_messages)
+
+            # Perform manager performance analysis
+            analyzer = ManagerPerformanceAnalyzer(messages, my_id)
+            performance_metrics = analyzer.analyze()
+
+            client_name = dialog.name or f"Client_{dialog.id}"
+            all_analytics[client_name] = {
+                'performance': performance_metrics,
+                'has_unfinished_promises': gemini_wrapper.check_unfinished_promises(text),
+                'quality_analysis': gemini_wrapper.analyze_conversation_quality(text)
+            }
+
+        # Print summary report
+        print("\n=== Manager Performance Analysis ===")
+        for client_name, analytics in all_analytics.items():
+            print(f"\nChat with {client_name}:")
+            print(analytics['performance']['summary'])
+            if analytics['has_unfinished_promises']:
+                print("⚠️ Has unfinished promises")
+            if analytics['quality_analysis']['has_issues']:
+                print("⚠️ Has quality issues:", analytics['quality_analysis']['issues_found'])
+            print("-" * 50)
 
 
 if __name__ == "__main__":
