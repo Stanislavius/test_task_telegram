@@ -5,14 +5,24 @@ A tool for analyzing manager performance in Telegram by tracking response times,
 ## Project Structure
 telegram-manager-analyzer/
 │── main.py              # Main script with Telegram client setup and analysis flow
+
 │── manager_performance.py  # Performance metrics calculation and reporting
+
 │── gemini_wrapper.py    # Wrapper for Google's Gemini AI API integration
+
 │── settings.py          # Configuration and environment variables
+
+
 ├── tests/
-│   └── test_gemini_queries.py  # Unit tests for Gemini AI functionality
+
+   └── test_gemini_queries.py  # Unit tests for Gemini AI functionality
+
 ├── .env.s                    # Environment variables (API keys, credentials)
+
 ├── .gitignore             # Git ignore file
+
 ├── requirements.txt        # Project dependencies
+
 └── README.md              # Project documentation
 
 
@@ -22,12 +32,18 @@ telegram-manager-analyzer/
 - Telegram API credentials (api_id and api_hash)
 - Google Cloud credentials for Gemini AI
 
-## Installation
+## Installation and running
 
 1. Clone the repository:
 2. Install dependencies:
 3. Create `.env` file in the project root or pass them as environmental variables the same way as in .env.sample
 4. Run "main.py"
+
+First run will require Telegram authorization:
+- Enter phone number
+- Enter verification code
+- Enter 2FA password if enabled
+
 
 ## Setting up Telegram API
 
@@ -43,14 +59,6 @@ telegram-manager-analyzer/
    - Create service account key and download JSON file
    - Set path to file in .env
 
-## Running the Application
-
-1. Ensure virtual environment is activated
-
-First run will require Telegram authorization:
-- Enter phone number
-- Enter verification code
-- Enter 2FA password if enabled
 
 ## Output
 
